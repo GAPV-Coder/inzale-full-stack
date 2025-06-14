@@ -15,22 +15,27 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async register(registerDto: RegisterDto): Promise<{ token: string; email: string; role: string }> {
+    async register(registerDto: RegisterDto): Promise<{ message: string; token: string; email: string; role: string }> {
         const { email, password, role } = registerDto;
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = new this.userModel({ email, password: hashedPassword, role });
         await user.save();
         const payload = { sub: user._id, email: user.email, role: user.role };
-        return { token: this.jwtService.sign(payload), email: user.email, role: user.role };
+        return {
+            message: 'User registered successfully',
+            token: this.jwtService.sign(payload),
+            email: user.email,
+            role: user.role,
+        };
     }
 
-    async login(loginDto: LoginDto): Promise<{ token: string }> {
+    async login(loginDto: LoginDto): Promise<{ message: string; token: string; email: string }> {
         const { email, password } = loginDto;
         const user = await this.userModel.findOne({ email });
         if (!user || !(await bcrypt.compare(password, user.password))) {
             throw new UnauthorizedException('Invalid credentials');
         }
         const payload = { sub: user._id, email: user.email, role: user.role };
-        return { token: this.jwtService.sign(payload) };
+        return { message: 'User logged in successfully', email: user.email, token: this.jwtService.sign(payload) };
     }
 }
