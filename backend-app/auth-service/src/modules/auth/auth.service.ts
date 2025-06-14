@@ -15,13 +15,13 @@ export class AuthService {
         private jwtService: JwtService,
     ) { }
 
-    async register(registerDto: RegisterDto): Promise<{ token: string }> {
+    async register(registerDto: RegisterDto): Promise<{ token: string; email: string; role: string }> {
         const { email, password, role } = registerDto;
         const hashedPassword = await bcrypt.hash(password, 10);
         const user = new this.userModel({ email, password: hashedPassword, role });
         await user.save();
         const payload = { sub: user._id, email: user.email, role: user.role };
-        return { token: this.jwtService.sign(payload) };
+        return { token: this.jwtService.sign(payload), email: user.email, role: user.role };
     }
 
     async login(loginDto: LoginDto): Promise<{ token: string }> {
